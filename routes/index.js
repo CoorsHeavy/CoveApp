@@ -41,6 +41,17 @@ router.get('/all', function(req, res, next) {
     allRunIt(req);
 });
 
+router.get('/query', function(req, res, next) {
+    req.start = Date.now();
+    console.log(req.query.endtime);
+    console.log(req.query.enddate);
+    if(req.query.package.length  == 0){
+        allRunIt(req);
+    } else {
+        singleRunIt(req);
+    }
+});
+
 //------------------------------------------------------------------------------------------------parse area and print test
 
 
@@ -49,11 +60,17 @@ function allRunIt(req){
     var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
     var longitude = req.query.longitude;
     var latitude = req.query.latitude;
-    var package = req.query.package;
-    var startTime = req.query.startTime;
-    var endTime = req.query.endTime;
+    var startTime = req.query.starttime;
+    var endTime = req.query.endtime;
+    var startDate = req.query.startdate;
+    var endDate = req.query.enddate;
     var radius = req.query.radius;
     var month = new Array();
+
+    var sdt = new Date(startDate+' '+startTime);
+    var edt = new Date(endDate+' '+endTime);
+    console.log(sdt.getTime());
+    console.log(sdt.getTime());
     month[0] = "january";
     month[1] = "february";
     month[2] = "march";
