@@ -1,0 +1,78 @@
+/*
+main.css stylesheet for d3 project
+
+*/
+#wrapper1 {
+    /* place holder for future editing*/
+}
+#wrapper2 {
+    /* place holder for future editing*/
+}
+
+#BarGraph1 {
+    background-color:aliceblue;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+#LolipopData1 {
+    background-color:aliceblue;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+#BarGraph2 {
+    background-color:blanchedalmond;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+#LolipopData2 {
+    background-color:blanchedalmond;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+#BarGraph3 {
+    background-color:aliceblue;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+#LolipopData3 {
+    background-color:aliceblue;
+    width:auto;
+    height: auto;
+    display: inline-block;
+    text-align: center;
+}
+
+
+/* Allows centering Just for no text objects*/
+#container{
+    margin: 0px 0;
+    padding: 0;
+    text-align: center;
+}
+/* Allows centering and vertical stacKing of items for text boxes */
+#containerText{
+    width: 500px;
+    margin: 0px auto;
+    padding: 0;
+    text-align: left;
+    display: block;
+}
+/* indent paragraphs */
+p {
+    text-indent: 25px;
+}

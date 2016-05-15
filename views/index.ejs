@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= title %></title>
+    <title>Focus Point</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script type="text/javascript" src="readfile.js"></script>
 
@@ -26,31 +26,33 @@
 
 
 
-      <form action="query" method="get">
+      <form action="query1" method="get">
         Longitude: <input type="text" name="longitude"><br>
         Latitude: <input type="text" name="lati tude"><br>
 
         Radius:  <select name="radius">
-          <option value="0.1"> Closer than 0.1 Miles</option>
-          <option value="0.05"> Closer than 0.05 Miles</option>
-          <option value="0.025"> Closer than 0.025 Miles</option>
-          <option value="0.001">Closer than 0.001 Miles</option>
+          <option value="< 0.1"> Closer than 0.1 Miles</option>
+          <option value="< 0.05"> Closer than 0.05 Miles</option>
+          <option value="< 0.025"> Closer than 0.025 Miles</option>
+          <option value="< 0.001">Closer than 0.001 Miles</option>
 
         </select><br>
 
 
       <div id="new_date">
           <br>
-          Start Time <input name="startdate" type=date min=2015-09-01>
-          <input name="starttime" type=time step=3600>
+          Start Time <input type=date min=2015-09-01>
+          <input type=time step=3600>
           <br>
-          End Time <input name="enddate" type=date min=2015-09-01>
-          <input name="endtime" type=time step=3600>
+          End Time <input type=date min=2015-09-01>
+          <input type=time step=3600>
           <br>
       </div>
 
         Package Name (You name it): <input type="text" name="package"><br>
-        <input type="submit" value="Submit">
+
+        <!--<input type="submit" value="Submit">-->
+          <a href="/submit">Submit</a>
 
       </form>
    </div>
