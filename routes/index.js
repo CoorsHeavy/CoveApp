@@ -62,7 +62,7 @@ function runIt(req){
     var stream = CombinedStream.create();
 
     set.forEach(function(item, item2) {
-        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
+        stream.append(fs.createReadStream('/Users/jonathankumamoto/hackathon/CoveApp/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
     });
     var ids = new Set([]);
     csv
@@ -112,7 +112,7 @@ function runIt2(req){
     // }
     //for (var u = 0; u < dates.length; u++)
     //{
-        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
+        stream.append(fs.createReadStream('/Users/jonathankumamoto/hackathon/CoveApp/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
     //}
     for (var u = 0; u < list.length; u++)
     {
