@@ -60,6 +60,8 @@ function allRunIt(req){
 
     var sdt = new Date(startDate+' '+startTime);
     var edt = new Date(endDate+' '+endTime);
+    console.log(sdt.getTime());
+    console.log(sdt.getTime());
     month[0] = "january";
     month[1] = "february";
     month[2] = "march";
