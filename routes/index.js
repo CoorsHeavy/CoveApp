@@ -191,6 +191,7 @@ function runIt22(req){
     var stream = CombinedStream.create();
     var apps = new Set(["air.WatchESPN","com.abclocal.wpvi.news","com.airbnb.android","Com.amazon.fv","Com.amazon.kindle","Com.amazon.mp3","com.amazon.mShop.android","com.amazon.mShop.android.shopping","com.amazon.venezia","Com.amctv.mobile","Com.andrewshu.android.reddit","Com.bestbuy.android","Com.cbs.sportsapp.android.mich","com.chess","Com.clearchannel.iheartradio.controller","com.cnn.mobile.android.phone","com.devhd.feedly","com.disney.mdx.wdw.google","Com.dominospizza","Com.ebay.mobile","Com.espn.radio","Com.espn.score_center","Com.espn.streakforcash","Com.etsy.android","Com.facebook.katana","com.facebook.pages.app","com.fandango","com.foursquare.robin","com.glu.baseball15","Com.google.android.apps.magazines","Com.google.android.youtube","Com.gotv.nflgamecenter.us.lite","Com.groupon","com.HBO","Com.icenta.sudoku.ui","Com.instagram.android","com.joelapenna.foursquared","com.king.candycrushsaga","com.king.farmheroessaga","Com.lumoslabs.lumosity","com.miniclip.eightballpool","com.mobitv.client.tmobiletvhd","com.myfitnesspal.android","com.newegg.app","Com.nfl.now","com.platypus.mp3download.freemusic","com.playstudios.myvegas.blackjack","com.rovio.angrybirds","com.sec.android.app.videoplayer","Com.sec.android.daemonapp.ap.yahoostock.stockclock","com.sec.chaton","com.shazam.android","com.skava.toysrus.babiesrusUS","Com.skgames.trafficracer","com.slashpadmobile.crossword","Com.snapchat.android","com.spacegame.solitaire1","com.SpaceInch.DiscoBees","com.supercell.boombeach","Com.supercell.clashofclans","com.target.socsav","Com.ticketmaster.mobile.android.na","com.tinder","com.tour.pgatour","Com.tripadvisor.tripadvisor","Com.tumblr","Com.twitter.android","com.unicell.pagoandroid","Com.walmart.android","com.whatsapp","Com.withbuddies.yahtzee","Com.yahoo.mobile.client.android.fantasyfootball","com.yodo1.crossyroad","com.zyga.words","com.zynga.wwf2.free","flipboard.app","it.junglestudios.splashyfish","Javax.microedition.gba.android","net.flixster.android","Tv.peel.samsung.app","uk.co.aifactory.backgammonfree"]);
     var list = req.ids;
+    var mp = new Map({});
     //for (var u = 0; u < dates.length; u++)
     //{
     stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
@@ -199,9 +200,14 @@ function runIt22(req){
     {
         map[list[u]] = Number(0);
     }
+    for (var u = 0; u < req.hours.length; u++)
+    {
+        mp.set(req.hours[u], new Set({}));
+    }
     csv
         .fromStream(stream, {headers : true})
         .on("data", function(data){
+
             if(Number(data.device_id) > Number(list[-1])){
 
             }
@@ -210,7 +216,13 @@ function runIt22(req){
                 new Date('2015-09-02 19:25:34').getTime();
                 var run = 0;
                 for (var u = 0; u < req.hours.length; u++){
-                    run += interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+                    var j = interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+                    run += j;
+                    if(j != 0){
+                        var st = mp.get(req.hours[u]);
+                        st.add(data.device_id);
+                        mp.set(req.hours[u], st);
+                    }
                 }
                 map[data.device_id] += run;
             }
@@ -225,10 +237,29 @@ function runIt22(req){
                 map[list[u]] = Math.round(map[list[u]]);
                 total += map[list[u]];
             }
+            for (var u = 0; u < req.hours.length; u++)
+            {
+                mp.set(req.hours[u], mp.get(req.hours[u]).toArray());
+            }
             average = Math.round(total / list.length);
             console.log(total);
             console.log(average);
             console.log(map);
+            console.log(mp.toArray());
+            mp.forEach(function(item, item2) {
+                console.log(item);
+                console.log(item2);
+            });
+            var result = {};
+            var histogram = {};
+            mp.forEach(function(item, item2) {
+                histogram[item1] = item2.length
+            });
+            result["total"] = total;
+            result["average"] = average;
+            result["map"] = map;
+            result["histogram"] = histogram;
+            result["lists"] = ;
         });
 }
 
