@@ -1,6 +1,9 @@
 var express = require('express');
 var fs = require('fs');
 var csv = require('csv');
+var util = require('util');
+var stream = require('stream');
+var es = require('event-stream');
 var router = express.Router();
 
 /* GET home page. */
@@ -20,7 +23,7 @@ router.get('/query1', function(req, res, next) {
         console.log(data);
     });
 
-    fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/categories_google.csv').pipe(parser);
+    fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/wifi_info/wifi_info_all_november.csv').pipe(parser);
     res.send(req.query.package);
 });
 
