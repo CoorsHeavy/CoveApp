@@ -4,6 +4,10 @@ var util = require('util');
 var stream = require('stream');
 var es = require('event-stream');
 var csv = require("fast-csv");
+var Set = require("collections/set");
+var CombinedStream = require('combined-stream');
+var geolib = require('geolib');
+var mkdirp = require('mkdirp');
 var router = express.Router();
 console.log("hi");
 
@@ -13,309 +17,133 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/query1', function(req, res, next) {
+    req.start = Date.now();
+    console.log(req.start);
     runIt(req);
+
 });
 
 
 //------------------------------------------------------------------------------------------------parse area and print test
 
 
-// Converts from degrees to radians.
-Math.radians = function(degrees) {
-    return degrees * Math.PI / 180;
-}; //needed function
-
-// Converts from radians to degrees.
-Math.degrees = function(radians) {
-    return radians * 180 / Math.PI;
-}; //needed function
-
-
-function distance(lat1, lon1, lat2, lon2, unit) {
-    var radlat1 = Math.PI * lat1/180;
-    var radlat2 = Math.PI * lat2/180;
-    var theta = lon1-lon2;
-    var radtheta = Math.PI * theta/180;
-    var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-    dist = Math.acos(dist);
-    dist = dist * 180/Math.PI;
-    dist = dist * 60 * 1.1515;
-    if (unit=="K") { dist = dist * 1.609344 }
-    if (unit=="N") { dist = dist * 0.8684 }
-    return dist
-} //needed function
-
-
-
-var csvStreamBETA = csv() // ignore this one... AN EXAMPLE which prints out things from the csv file if you need a reference.
-    .on("data", function(data) {
-        //~~~~~~~~~~~~This code stores all variables of a certain key for CSV
-        var dataLength = data.length;
-        var uniqueID_key = "";
-        var lat1 = 0;
-        var lng1 = 0;
-        var dateTimestampString = [];
-        //Years-Month-Day
-        var date = [];
-        //Hours:Minutes:Seconds
-        var time = [];
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        if (firstChecker) { //-----------------------------------------Just remember this only happens once of the csv file
-            for (var J = 0; J < dataLength; J++) {
-                if (data[J] == "longitude") {
-                    longCountpos = J;
-                }
-                if (data[J] == "latitude") {
-                    latCountpos = J;
-                }
-                if (data[J] == "timestamp") {
-                    timeCountpos = J;
-                }
-                if(data[J] == "device_id"){
-                    uniqueID_counter = J;
-                }
-            }
-            firstChecker = false;
-        } else {
-            for (var K = 0; K < dataLength; K++) {
-                if (longCountpos == K) {
-                    lng1 = data[K];
-                }
-
-                if (latCountpos == K) {
-                    lat1 = data[K];
-                }
-                if (timeCountpos == K) {
-                    dateTimestampString = data[K].split(' ');
-                    /*
-                     DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER
-                     assuming the ' ' spaces the time vs date, this can be dangerous because
-                     it can break the code very easily.... if there's no space or if the date and time are swapped
-                     */
-                    date = dateTimestampString[0].split('-');
-                    time = dateTimestampString[1].split(':');
-                }
-                if(uniqueID_counter == K){
-                    uniqueID_key = data[K];
-                }
-
-            }
-        }
-
-        moveToTime = false;
-        if (distance(lat1, lng1, latPOINT, lngPOINT, "M") < 0.5) { //means less then half a mile right now
-
-            //---check for starts
-            var startInputYear = 2014; // inputted by user
-            var endInputYear = 2016; //inputted by user
-            var startDataYear = date[0]; //data result
-            var endDataYear = date[0];   //data result
-
-            var startInputMonth = 11; // inputted by user ex: 2015:11
-            var endInputMonth = 1; //inputted by user ex: 2016:1
-            var startDataMonth = date[1]; //data result
-            var endDataMonth = date[1];   //data result
-
-            var startInputDay = 25; // inputted by user ex: 2015:11:25
-            var endInputDay = 1; //inputted by user ex: 2016:1:1
-            var startDataDay = date[2]; //data result
-            var endDataDay = date[2];   //data result
-
-            if (startInputYear <= endDataYear || endInputYear >= startDataYear) { //there's overlap
-                if (startInputMonth <= endDataMonth || endInputMonth >= startDataMonth) { //there's overlap
-
-
-                    if (startInputDay <= endDataDay || endInputDay >= startDataDay) { //there's overlap
-                        //this date is on the day, selected. use it
-
-                        moveToTime = true;
-                    } else {// don't include
-
-                    }
-                } else {//don't include
-
-                }
-            } else {
-                //don't include
-            }
-
-
-        } //end of checking for overlapping dates
-
-
-        if (moveToTime) { //means time to compare date
-
-            //---check for starts
-            var startInputHour = 0; // inputted by user
-            var endInputHour = 24; //inputted by user
-            var startDataHour = date[0]; //data result
-            var endDataHour = date[0];   //data result
-            if (startInputHour <= endDataHour || endInputHour >= startDataHour) { //there's overlap
-                if(!(finalList.indexOf(uniqueID_key) > -1)){
-                    finalList.push(uniqueID_key);
-                }
-            }
-        } //end of checking for overlapping date
-
-        //-----------------------------------------Keep an eye for data that gets corrupted, this happens often in parsing.
-    })
-    .on("end", function(){
-        console.log("done");
-        fs.writeFile('datastuff.csv', finalList, function (err) { //produces a pure csv file, all things are seperated by comma's
-            if (err) return console.log(err);
-        });
-    });
-
-
-//stream.pipe(csvStreamBETA);
-
-///----------------------------------------------------------------------------------------------------test area end
-
-var stream = fs.createReadStream('/Users/jonathankumamoto/hackathon/CoveApp/public/csv/mobile_signal_info/mobile_signal_info_all_november.csv');
-var longCountpos = 0;
-var latCountpos = 0;
-var timeCountpos= 0;
-var uniqueID_counter = 0;
-var firstChecker = true;
-var latPOINT=41.0460643; //***ASSIGN***
-var lngPOINT=-73.8044991; //***ASSIGN***
-var finalList = [];
 
 function runIt(req){
-
+    var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
     var longitude = req.query.longitude;
     var latitude = req.query.latitude;
+    var longitude = '-73.815129';
+    var latitude = '40.9769753';
     var package = req.query.package;
     var startTime = req.query.startTime;
     var endTime = req.query.endTime;
-    ////////------------------------------------------------------Start parsing
-    var csvStream = csv()
-        .on("data", function(data) {
-            //~~~~~~~~~~~~This code stores all variables of a certain key for CSV
-            var dataLength = data.length;
-            var uniqueID_key = "";
-            var lat1 = 0;
-            var lng1 = 0;
-            var dateTimestampString = [];
-            //Years-Month-Day
-            var date = [];
-            //Hours:Minutes:Seconds
-            var time = [];
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //var radius = req.query.radius;
+    var radius = 60000;
+    var month = new Array();
+    month[0] = "january";
+    month[1] = "february";
+    month[2] = "march";
+    month[3] = "april";
+    month[4] = "may";
+    month[5] = "june";
+    month[6] = "july";
+    month[7] = "august";
+    month[8] = "september";
+    month[9] = "october";
+    month[10] = "november";
+    month[11] = "december";
+    var hours = [1441090800000,1441090860000,1441090920000,1441090980000,1441091040000,1441091100000,1441091160000,1441091220000,1441091280000,1441091340000,1441091400000,1441091460000,1441091520000,1441091580000,1441091640000,1441091700000,1441091760000,1441091820000,1441091880000,1441091940000,1441092000000,1441092060000,1441092120000,1441092180000];
+    var set = new Set([]);
+    for (i = 0; i < hours.length; i++) {
+        var d = new Date(hours[i]);
+        var n = month[d.getMonth()];
+        set.add(n);
+    }
+    var stream = CombinedStream.create();
 
-            if (firstChecker) { //-----------------------------------------Just remember this only happens once of the csv file
-                for (var J = 0; J < dataLength; J++) {
-                    if (data[J] == "longitude") {
-                        longCountpos = J;
-                    }
-                    if (data[J] == "latitude") {
-                        latCountpos = J;
-                    }
-                    if (data[J] == "timestamp") {
-                        timeCountpos = J;
-                    }
-                    if(data[J] == "device_id"){
-                        uniqueID_counter = J;
-                    }
-                }
-                firstChecker = false;
-            } else {
-                for (var K = 0; K < dataLength; K++) {
-                    if (longCountpos == K) {
-                        lng1 = data[K];
-                    }
+    set.forEach(function(item, item2) {
+        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
+    });
+    var ids = new Set([]);
+    csv
+        .fromStream(stream, {headers : true})
+        .on("data", function(data){
+            //console.log(data);
 
-                    if (latCountpos == K) {
-                        lat1 = data[K];
-                    }
-                    if (timeCountpos == K) {
-                        dateTimestampString = data[K].split(' ');
-                        /*
-                         DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER
-                         assuming the ' ' spaces the time vs date, this can be dangerous because
-                         it can break the code very easily.... if there's no space or if the date and time are swapped
-                         */
-                        date = dateTimestampString[0].split('-');
-                        time = dateTimestampString[1].split(':');
-                    }
-                    if(uniqueID_counter == K){
-                        uniqueID_key = data[K];
-                    }
-
+            if(!ids.has(data.device_id)) {
+                var interesting = true;
+                //is device interesting algorithm
+                if(geolib.getDistance({latitude: Number(latitude), longitude: Number(longitude)},
+                        {latitude: Number(data.latitude), longitude: Number(data.longitude)}) > radius)interesting = false;
+                //end is device interesting algorithm
+                if (interesting == true) {
+                    ids.add(data.device_id);
                 }
             }
+        })
+        .on("end", function(){
+            var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
+            mkdirp(dir, function(err) {
+                // path exists unless there was an error
 
-            moveToTime = false;
-            if (distance(lat1, lng1, latPOINT, lngPOINT, "M") < 0.5) { //means less then half a mile right now
-
-                //---check for starts
-                var startInputYear = 2014; // inputted by user ***ASSIGN***
-                var endInputYear = 2016; //inputted by user ***ASSIGN***
-                var startDataYear = date[0]; //data result
-                var endDataYear = date[0];   //data result
-
-                var startInputMonth = 11; // inputted by user ex: 2015:11 ***ASSIGN***
-                var endInputMonth = 1; //inputted by user ex: 2016:1 ***ASSIGN***
-                var startDataMonth = date[1]; //data result
-                var endDataMonth = date[1];   //data result
-
-                var startInputDay = 25; // inputted by user ex: 2015:11:25 ***ASSIGN***
-                var endInputDay = 1; //inputted by user ex: 2016:1:1 ***ASSIGN***
-                var startDataDay = date[2]; //data result
-                var endDataDay = date[2];   //data result
-
-                if (startInputYear <= endDataYear || endInputYear >= startDataYear) { //there's overlap
-                    if (startInputMonth <= endDataMonth || endInputMonth >= startDataMonth) { //there's overlap
-
-
-                        if (startInputDay <= endDataDay || endInputDay >= startDataDay) { //there's overlap
-                            //this date is on the day, selected. use it
-
-                            moveToTime = true;
-                        } else {// don't include
-
-                        }
-                    } else {//don't include
-
-                    }
-                } else {
-                    //don't include
+            });
+            fs.appendFile(dir + 'device_ids.csv', ids, function (err,data) {
+                if (err) {
+                    return console.log(err);
                 }
+                console.log(data);
+            });
+            req.hudson.ids = ids;
+            req.hudson.hours = hours;
+        });
+}
 
+function runIt2(req){
+    var map = {};
+    var stream = CombinedStream.create();
+    var dates = new Set([]);
+    // for (var u = 0; u < req.hudson.hours.length; u++)
+    // {
+    //     var str = "";
+    //     var d = new Date(hours[u]);
+    //     var year = d.getFullYear();
+    //     var month = d.getMonth();
+    //     var n = date.format("YYYY_MM_dd");
+    // }
+    //for (var u = 0; u < dates.length; u++)
+    //{
+        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
+    //}
+    for (var u = 0; u < list.length; u++)
+    {
+        map[list[u]] = Number(0);
+    }
+    csv
+        .fromStream(stream, {headers : true})
+        .on("data", function(data){
+            if(Number(data.device_id) > Number(list[-1])){
 
-            } //end of checking for overlapping dates
+            }
+            else if(data.type == "5" && list.indexOf(data.device_id) != -1){
+                map[data.device_id] += Number(data.run_time);
+                console.log(map);
+            }
 
-
-            if (moveToTime) { //means time to compare date
-
-                //---check for starts
-                var startInputHour = 0; // inputted by user
-                var endInputHour = 24; //inputted by user
-                var startDataHour = date[0]; //data result
-                var endDataHour = date[0];   //data result
-                if (startInputHour <= endDataHour || endInputHour >= startDataHour) { //there's overlap
-                    if(!(finalList.indexOf(uniqueID_key) > -1)){
-                        finalList.push(uniqueID_key);
-                    }
-                }
-            } //end of checking for overlapping date
-
-            //-----------------------------------------Keep an eye for data that gets corrupted, this happens often in parsing.
         })
         .on("end", function(){
             console.log("done");
-            fs.writeFile('datastuff.csv', finalList, function (err) { //produces a pure csv file, all things are seperated by comma's. IT WORKS.
-                if (err) return console.log(err);
-            });
+            var total = 0;
+            for (var u = 0; u < list.length; u++)
+            {
+                map[list[u]] /= (1000 * 60);
+                map[list[u]] = Math.round(map[list[u]]);
+                total += map[list[u]];
+            }
+            average = Math.round(total / list.length);
+            console.log(total);
+            console.log(average);
+            console.log(map);
         });
-
-    res.send(req.query.package);
-
-    /*
-     Keynote: This data parser is almost a 'hard-coded' style of parser in terms of parsing query requests
-     For future, change it to handle general CSV files without getting into trouble.
-     */
 }
 
 module.exports = router;
