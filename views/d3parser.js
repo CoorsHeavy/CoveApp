@@ -7,6 +7,7 @@ var finalDataSheet1 = [];
 
 console.log("hello");
 
+
 d3.text("../public/csv/app_usage_events/app_usage_events_2015_09_02.csv",
     function(d){
         SeptemberDataSheet1 = d3.csv.parseRows(d);
