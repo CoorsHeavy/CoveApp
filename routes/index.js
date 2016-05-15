@@ -13,8 +13,17 @@ var router = express.Router();
 console.log("hi");
 
 /* GET home page. */
+
+router.get('/', function(req, res, next) {
+    res.render('index', { title: 'Express' });
+});
+
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
+});
+
+router.get('/submit', function(req, res, next) {
+    res.render('results', { title: 'Express' });
 });
 
 router.get('/basic', function(req, res, next) {
