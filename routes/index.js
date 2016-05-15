@@ -17,29 +17,33 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/query1', function(req, res, next) {
+router.get('/basic', function(req, res, next) {
     req.start = Date.now();
-    console.log(req.start);
-    runIt(req);
-
+    basicRunIt(req);
 });
 
+router.get('/single', function(req, res, next) {
+    req.start = Date.now();
+    singleRunIt(req);
+});
+
+router.get('/all', function(req, res, next) {
+    req.start = Date.now();
+    allRunIt(req);
+});
 
 //------------------------------------------------------------------------------------------------parse area and print test
 
 
 
-function runIt(req){
+function allRunIt(req){
     var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
     var longitude = req.query.longitude;
     var latitude = req.query.latitude;
-    var longitude = -73.815129;
-    var latitude = 40.9769753;
     var package = req.query.package;
     var startTime = req.query.startTime;
     var endTime = req.query.endTime;
-    //var radius = req.query.radius;
-    var radius = 60000;
+    var radius = req.query.radius;
     var month = new Array();
     month[0] = "january";
     month[1] = "february";
@@ -63,7 +67,7 @@ function runIt(req){
     var stream = CombinedStream.create();
 
     set.forEach(function(item, item2) {
-        stream.append(fs.createReadStream('/Users/jonathankumamoto/hackathon/CoveApp/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
+        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
     });
     var ids = new Set([]);
     csv
@@ -96,96 +100,148 @@ function runIt(req){
             });
             req.ids = ids.toArray();
             req.hours = hours;
-            runIt22(req);
+            allRequest(req);
         });
 }
 
-function runIt2(req){
-    var map = {};
-    var stream = CombinedStream.create();
-    var dates = new Set([]);
-    var list = req.ids;
-    //for (var u = 0; u < dates.length; u++)
-    //{
-        stream.append(fs.createReadStream('/Users/jonathankumamoto/hackathon/CoveApp/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
-    //}
-    for (var u = 0; u < list.length; u++)
-    {
-        map[list[u]] = Number(0);
+function singleRunIt(req){
+    var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
+    var longitude = req.query.longitude;
+    var latitude = req.query.latitude;
+    var package = req.query.package;
+    var startTime = req.query.startTime;
+    var endTime = req.query.endTime;
+    //var radius = req.query.radius;
+    var radius = 60000;
+    var month = new Array();
+    month[0] = "january";
+    month[1] = "february";
+    month[2] = "march";
+    month[3] = "april";
+    month[4] = "may";
+    month[5] = "june";
+    month[6] = "july";
+    month[7] = "august";
+    month[8] = "september";
+    month[9] = "october";
+    month[10] = "november";
+    month[11] = "december";
+    var hours = [1441177200000,1441177260000,1441177320000,1441177380000,1441177440000,1441177500000,1441177560000,1441177620000,1441177680000,1441177740000,1441177800000,1441177860000,1441177920000,1441177980000,1441178040000,1441178100000,1441178160000,1441178220000,1441178280000,1441178340000,1441178400000,1441178460000,1441178520000,1441178580000];
+    var set = new Set([]);
+    for (i = 0; i < hours.length; i++) {
+        var d = new Date(hours[i]);
+        var n = month[d.getMonth()];
+        set.add(n);
     }
+    var stream = CombinedStream.create();
+
+    set.forEach(function(item, item2) {
+        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
+    });
+    var ids = new Set([]);
     csv
         .fromStream(stream, {headers : true})
         .on("data", function(data){
-            if(Number(data.device_id) > Number(list[-1])){
+            //console.log(data);
 
-            }
-            else if(data.type == "5" && list.indexOf(data.device_id) != -1){
-                map[data.device_id] += Number(data.run_time);
-            }
-
-        })
-        .on("end", function(){
-            console.log("done");
-            var total = 0;
-            for (var u = 0; u < list.length; u++)
-            {
-                map[list[u]] /= (1000 * 60);
-                map[list[u]] = Math.round(map[list[u]]);
-                total += map[list[u]];
-            }
-            average = Math.round(total / list.length);
-            console.log(total);
-            console.log(average);
-            console.log(map);
-        });
-}
-
-function runIt21(req){
-    var map = {};
-    var stream = CombinedStream.create();
-    var dates = new Set([]);
-    var list = req.ids;
-    //for (var u = 0; u < dates.length; u++)
-    //{
-    stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
-    //}
-    for (var u = 0; u < list.length; u++)
-    {
-        map[list[u]] = Number(0);
-    }
-    csv
-        .fromStream(stream, {headers : true})
-        .on("data", function(data){
-            if(Number(data.device_id) > Number(list[-1])){
-
-            }
-            else if(data.type == "5" && list.indexOf(data.device_id) != -1){
-                new Date('2015-09-02 19:25:34').getTime();
-                var run = 0;
-                for (var u = 0; u < req.hours.length; u++){
-                    run += interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+            if(!ids.has(data.device_id)) {
+                var interesting = true;
+                //is device interesting algorithm
+                if(geolib.getDistance({latitude: Number(latitude), longitude: Number(longitude)},
+                        {latitude: Number(data.latitude), longitude: Number(data.longitude)}) > radius)interesting = false;
+                //end is device interesting algorithm
+                if (interesting == true) {
+                    console.log(data);
+                    ids.add(data.device_id);
                 }
-                map[data.device_id] += run;
             }
-
         })
         .on("end", function(){
-            console.log("done");
-            var total = 0;
-            for (var u = 0; u < list.length; u++)
-            {
-                map[list[u]] /= (1000 * 60);
-                map[list[u]] = Math.round(map[list[u]]);
-                total += map[list[u]];
-            }
-            average = Math.round(total / list.length);
-            console.log(total);
-            console.log(average);
-            console.log(map);
+            var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
+            mkdirp(dir, function(err) {
+                // path exists unless there was an error
+
+            });
+            fs.appendFile(dir + 'device_ids.csv', ids, function (err,data) {
+                if (err) {
+                    return console.log(err);
+                }
+            });
+            req.ids = ids.toArray();
+            req.hours = hours;
+            singleRequest(req);
         });
 }
 
-function runIt22(req){
+function basicRunIt(req){
+    var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
+    var longitude = req.query.longitude;
+    var latitude = req.query.latitude;
+    var package = req.query.package;
+    var startTime = req.query.startTime;
+    var endTime = req.query.endTime;
+    var radius = req.query.radius;
+    var month = new Array();
+    month[0] = "january";
+    month[1] = "february";
+    month[2] = "march";
+    month[3] = "april";
+    month[4] = "may";
+    month[5] = "june";
+    month[6] = "july";
+    month[7] = "august";
+    month[8] = "september";
+    month[9] = "october";
+    month[10] = "november";
+    month[11] = "december";
+    var hours = [1441177200000,1441177260000,1441177320000,1441177380000,1441177440000,1441177500000,1441177560000,1441177620000,1441177680000,1441177740000,1441177800000,1441177860000,1441177920000,1441177980000,1441178040000,1441178100000,1441178160000,1441178220000,1441178280000,1441178340000,1441178400000,1441178460000,1441178520000,1441178580000];
+    var set = new Set([]);
+    for (i = 0; i < hours.length; i++) {
+        var d = new Date(hours[i]);
+        var n = month[d.getMonth()];
+        set.add(n);
+    }
+    var stream = CombinedStream.create();
+
+    set.forEach(function(item, item2) {
+        stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/mobile_signal_info/mobile_signal_info_all_' + item + '.csv'));
+    });
+    var ids = new Set([]);
+    csv
+        .fromStream(stream, {headers : true})
+        .on("data", function(data){
+            //console.log(data);
+
+            if(!ids.has(data.device_id)) {
+                var interesting = true;
+                //is device interesting algorithm
+                if(geolib.getDistance({latitude: Number(latitude), longitude: Number(longitude)},
+                        {latitude: Number(data.latitude), longitude: Number(data.longitude)}) > radius)interesting = false;
+                //end is device interesting algorithm
+                if (interesting == true) {
+                    console.log(data);
+                    ids.add(data.device_id);
+                }
+            }
+        })
+        .on("end", function(){
+            var dir = '/Users/kaylab/Pictures/app/tmp/'+req.start+'/';
+            mkdirp(dir, function(err) {
+                // path exists unless there was an error
+
+            });
+            fs.appendFile(dir + 'device_ids.csv', ids, function (err,data) {
+                if (err) {
+                    return console.log(err);
+                }
+            });
+            req.ids = ids.toArray();
+            req.hours = hours;
+            basicRequest(req);
+        });
+}
+
+function allRequest(req){
     var map = {};
     var dates = new Set();
     var stream = CombinedStream.create();
@@ -259,16 +315,17 @@ function runIt22(req){
             result["average"] = average;
             result["map"] = map;
             result["histogram"] = histogram;
-            result["lists"] = ;
+            result["lists"] = mp;
         });
 }
 
-function runIt23(req){
+function singleRequest(req){
     var map = {};
     var dates = new Set();
     var stream = CombinedStream.create();
-    var apps = new Set([req.package]);
+    var apps = new Set([req.params.package]);
     var list = req.ids;
+    var mp = new Map({});
     //for (var u = 0; u < dates.length; u++)
     //{
     stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
@@ -277,17 +334,29 @@ function runIt23(req){
     {
         map[list[u]] = Number(0);
     }
+    for (var u = 0; u < req.hours.length; u++)
+    {
+        mp.set(req.hours[u], new Set({}));
+    }
     csv
         .fromStream(stream, {headers : true})
         .on("data", function(data){
+
             if(Number(data.device_id) > Number(list[-1])){
 
             }
             else if(data.type == "5" && list.indexOf(data.device_id) != -1 && apps.has(data.package_name)){
+                console.log(data);
                 new Date('2015-09-02 19:25:34').getTime();
                 var run = 0;
                 for (var u = 0; u < req.hours.length; u++){
-                    run += interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+                    var j = interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+                    run += j;
+                    if(j != 0){
+                        var st = mp.get(req.hours[u]);
+                        st.add(data.device_id);
+                        mp.set(req.hours[u], st);
+                    }
                 }
                 map[data.device_id] += run;
             }
@@ -302,10 +371,106 @@ function runIt23(req){
                 map[list[u]] = Math.round(map[list[u]]);
                 total += map[list[u]];
             }
+            for (var u = 0; u < req.hours.length; u++)
+            {
+                mp.set(req.hours[u], mp.get(req.hours[u]).toArray());
+            }
             average = Math.round(total / list.length);
             console.log(total);
             console.log(average);
             console.log(map);
+            console.log(mp.toArray());
+            mp.forEach(function(item, item2) {
+                console.log(item);
+                console.log(item2);
+            });
+            var result = {};
+            var histogram = {};
+            mp.forEach(function(item, item2) {
+                histogram[item1] = item2.length
+            });
+            result["total"] = total;
+            result["average"] = average;
+            result["map"] = map;
+            result["histogram"] = histogram;
+            result["lists"] = mp;
+        });
+}
+
+function basicRequest(req){
+    var map = {};
+    var dates = new Set();
+    var stream = CombinedStream.create();
+    var list = req.ids;
+    var mp = new Map({});
+    //for (var u = 0; u < dates.length; u++)
+    //{
+    stream.append(fs.createReadStream('/Users/kaylab/Pictures/app/public/csv/app_usage_events/app_usage_events_' + '2015_09_02' + '.csv'));
+    //}
+    for (var u = 0; u < list.length; u++)
+    {
+        map[list[u]] = Number(0);
+    }
+    for (var u = 0; u < req.hours.length; u++)
+    {
+        mp.set(req.hours[u], new Set({}));
+    }
+    csv
+        .fromStream(stream, {headers : true})
+        .on("data", function(data){
+
+            if(Number(data.device_id) > Number(list[-1])){
+
+            }
+            else if(data.type == "5" && list.indexOf(data.device_id) != -1){
+                console.log(data);
+                new Date('2015-09-02 19:25:34').getTime();
+                var run = 0;
+                for (var u = 0; u < req.hours.length; u++){
+                    var j = interval(new Date(data.start_date), new Date(data.end_date), req.hours[u], req.hours[u] + 3599400);
+                    run += j;
+                    if(j != 0){
+                        var st = mp.get(req.hours[u]);
+                        st.add(data.device_id);
+                        mp.set(req.hours[u], st);
+                    }
+                }
+                map[data.device_id] += run;
+            }
+
+        })
+        .on("end", function(){
+            console.log("done");
+            var total = 0;
+            for (var u = 0; u < list.length; u++)
+            {
+                map[list[u]] /= (1000 * 60);
+                map[list[u]] = Math.round(map[list[u]]);
+                total += map[list[u]];
+            }
+            for (var u = 0; u < req.hours.length; u++)
+            {
+                mp.set(req.hours[u], mp.get(req.hours[u]).toArray());
+            }
+            average = Math.round(total / list.length);
+            console.log(total);
+            console.log(average);
+            console.log(map);
+            console.log(mp.toArray());
+            mp.forEach(function(item, item2) {
+                console.log(item);
+                console.log(item2);
+            });
+            var result = {};
+            var histogram = {};
+            mp.forEach(function(item, item2) {
+                histogram[item1] = item2.length
+            });
+            result["total"] = total;
+            result["average"] = average;
+            result["map"] = map;
+            result["histogram"] = histogram;
+            result["lists"] = mp;
         });
 }
 
